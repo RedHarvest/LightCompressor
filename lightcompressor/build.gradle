@@ -31,7 +31,29 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:3.4.0"
 }
 
+task generateMySources(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+task addMySourcesToAar(type: Jar) {
+    archiveName "lightcompressorWithSources.aar"
+    destinationDir file("build")
+    from zipTree("build/outputs/aar/lightcompressor-release.aar")
+    from fileTree("build").include("libs/lightcompressor-sources.jar")
+}
+afterEvaluate { project ->
+    project.tasks.preBuild.dependsOn generateMySources
+    project.addMySourcesToAar.dependsOn build
+}
+artifacts {
+    archives addMySourcesToAar.archivePath
+}
+
 afterEvaluate {
+    project ->
+        project.tasks.preBuild.dependsOn generateMySources
+        project.addMySourcesToAar.dependsOn build
+
     publishing {
         publications {
             release(MavenPublication) {
